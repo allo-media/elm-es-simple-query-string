@@ -1,0 +1,8 @@
+{
+    "git-dependencies": {
+        "direct": {
+            "git@github.com:allo-media/elm-es-simple-query-string.git": "."
+        },
+        "indirect": {}
+    }
+}
