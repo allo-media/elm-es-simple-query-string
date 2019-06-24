@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/allo-media/elm-es-simple-query-string-parser.git"
+    "url": "git+https://github.com/allo-media/elm-es-simple-query-string.git"
   },
   "keywords": [
     "elm",
