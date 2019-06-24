@@ -1,0 +1,36 @@
+{
+  "name": "elm-es-simple-query-string",
+  "version": "0.0.1",
+  "description": "elm elastic simple query string parser and serializer",
+  "main": "index.js",
+  "directories": {
+    "example": "example",
+    "test": "tests"
+  },
+  "dependencies": {
+    "elm-live": "^3.4.1"
+  },
+  "devDependencies": {
+    "elm-analyse": "^0.16.4",
+    "elm-test": "^0.19.0-rev6"
+  },
+  "scripts": {
+    "test": "elm-test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/allo-media/elm-es-simple-query-string-parser.git"
+  },
+  "keywords": [
+    "elm",
+    "parser",
+    "elastic",
+    "search"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/allo-media/elm-es-simple-query-string-parser/issues"
+  },
+  "homepage": "https://github.com/allo-media/elm-es-simple-query-string-parser#readme"
+}

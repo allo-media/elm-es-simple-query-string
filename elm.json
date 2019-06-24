@@ -1,0 +1,19 @@
+{
+    "type": "package",
+    "name": "allo-media/elm-es-simple-query-string-parser",
+    "summary": "Parse and serialize an simple query string elastic",
+    "license": "MIT",
+    "version": "0.0.1",
+    "exposed-modules": [
+        "Elastic",
+        "Elastic.Expression"
+    ],
+    "elm-version": "0.19.0 <= v < 0.20.0",
+    "dependencies": {
+        "elm/core": "1.0.0 <= v < 2.0.0",
+        "elm/parser": "1.1.0 <= v < 2.0.0"
+    },
+    "test-dependencies": {
+        "elm-explorations/test": "1.0.0 <= v < 2.0.0"
+    }
+}
