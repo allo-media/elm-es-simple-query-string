@@ -2,7 +2,7 @@
 
 This package allow to parse an [elastic simple query string](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html#_simple_query_string_syntax) into an AST.
 
-`~N` tokenizer are not supported.
+`~N` tokenizer is not supported.
 
 At this time, the default operator for elastic must be set to "AND" in elastic search services.
 
