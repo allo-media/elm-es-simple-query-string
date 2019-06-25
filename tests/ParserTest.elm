@@ -51,10 +51,16 @@ suite =
                         parseQuery "tomatoes + cheese"
                             |> expect (And (Word "tomatoes") (Word "cheese")) "Error to parse And expression with + as delimiter"
                 ]
-            , test "should return a group of expression" <|
-                \_ ->
-                    parseQuery "tomatoes (cheese | pickle)"
-                        |> expect (And (Word "tomatoes") (Or (Word "cheese") (Word "pickle"))) "Error to parse a group of expression"
+            , describe "should return a group of expression"
+                [ test "with no spaces between expression" <|
+                    \_ ->
+                        parseQuery "tomatoes (cheese | pickle)"
+                            |> expect (And (Word "tomatoes") (Or (Word "cheese") (Word "pickle"))) "Error to parse a group of expression with no spaces between expression"
+                , test "with spaces between expression" <|
+                    \_ ->
+                        parseQuery "( ( \"demandé à\" | \"allais\" | \"devais\" ) \"être\" )"
+                            |> expect (And (Or (Or (Exact "demandé à") (Exact "allais")) (Exact "devais")) (Exact "être")) "Error to parse"
+                ]
             , test "should failed if the string is empty" <|
                 \_ ->
                     parseQuery ""

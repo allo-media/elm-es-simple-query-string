@@ -1,14 +1,14 @@
 module Elastic.Parser exposing (parse)
 
 import Elastic.Expression exposing (Expr(..))
-import Parser as Parser exposing (..)
+import Parser exposing (..)
 import Set exposing (Set)
 
 
 andExpr : Parser Expr
 andExpr =
     loop (Word "") andExprHelp
-        |> Parser.andThen checkIfWordIsEmpty
+        |> andThen checkIfWordIsEmpty
 
 
 andExprHelp : Expr -> Parser (Step Expr Expr)
@@ -17,7 +17,7 @@ andExprHelp state =
         [ succeed Loop
             |= excludeExpr
         , succeed (Loop << And state)
-            |. Parser.backtrackable
+            |. backtrackable
                 (variable
                     { start = \c -> c == '+' || c == ' '
                     , inner = \c -> c == '+' || c == ' '
@@ -26,22 +26,22 @@ andExprHelp state =
                 )
             |= excludeExpr
         , succeed ()
-            |> Parser.map (\_ -> Done state)
+            |> map (\_ -> Done state)
         ]
 
 
 checkIfWordIsEmpty : Expr -> Parser Expr
 checkIfWordIsEmpty expr =
     if expr == Word "" then
-        Parser.problem "Empty Word expression."
+        problem "Empty Word expression."
 
     else
-        Parser.succeed expr
+        succeed expr
 
 
 exactExpr : Parser Expr
 exactExpr =
-    Parser.succeed Exact
+    succeed Exact
         |. symbol "\""
         |= variable
             { start = \c -> c /= '"'
@@ -53,7 +53,7 @@ exactExpr =
 
 excludeExpr : Parser Expr
 excludeExpr =
-    Parser.oneOf
+    oneOf
         [ pureExclude
         , groupExp
         ]
@@ -61,10 +61,10 @@ excludeExpr =
 
 groupExp : Parser Expr
 groupExp =
-    Parser.oneOf
+    oneOf
         [ exactExpr
         , prefixOrWord
-        , Parser.succeed identity
+        , succeed identity
             |. symbol "("
             |. spaces
             |= orExpr
@@ -83,7 +83,7 @@ isWordChar char =
 orExpr : Parser Expr
 orExpr =
     loop (Word "") orExprHelp
-        |> Parser.andThen checkIfWordIsEmpty
+        |> andThen checkIfWordIsEmpty
 
 
 orExprHelp : Expr -> Parser (Step Expr Expr)
@@ -91,16 +91,16 @@ orExprHelp state =
     oneOf
         [ succeed ()
             |. end
-            |> Parser.map (\_ -> Done state)
+            |> map (\_ -> Done state)
         , succeed (Loop << Or state)
-            |. spaces
+            |. backtrackable spaces
             |. symbol "|"
             |. spaces
             |= andExpr
         , succeed Loop
             |= andExpr
         , succeed ()
-            |> Parser.map (\_ -> Done state)
+            |> map (\_ -> Done state)
         ]
 
 
@@ -111,7 +111,7 @@ parse string =
 
 prefixOrWord : Parser Expr
 prefixOrWord =
-    Parser.succeed
+    succeed
         (\word hasSymbol ->
             if hasSymbol then
                 Prefix word
@@ -125,7 +125,7 @@ prefixOrWord =
             , reserved = Set.fromList []
             }
         |= oneOf
-            [ Parser.map (\_ -> True) (symbol "*")
+            [ map (\_ -> True) (symbol "*")
             , succeed False
             ]
 
