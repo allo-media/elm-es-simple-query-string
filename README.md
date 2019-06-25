@@ -6,6 +6,17 @@ This package allow to parse an [elastic simple query string](https://www.elastic
 
 At this time, the default operator for elastic must be set to "AND" in elastic search services.
 
+## Alphabet
+
+* ( ) Group
+* [WORD] Char+
+* | OR
+* \+ AND
+* -- Exclude
+* "" Exact
+* \* prefix search
+* Specific case : Spaces (signifying in some contexts and not in others)
+
 ## AST
 
 ```elm
@@ -46,4 +57,4 @@ EXACTExpr => [^"]+
 
 ## Example of simple query String
 
-big* (potatoes|\"french fries\")
+big* (potatoes|\"french fries\") -salad
