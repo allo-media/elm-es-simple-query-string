@@ -104,13 +104,6 @@ orExprHelp state =
         ]
 
 
-queryExpr : Parser Expr
-queryExpr =
-    succeed identity
-        |= orExpr
-        |. end
-
-
 parse : String -> Result (List DeadEnd) Expr
 parse string =
     run queryExpr string
@@ -143,6 +136,13 @@ pureExclude =
         |. symbol "-"
         |. spaces
         |= groupExp
+
+
+queryExpr : Parser Expr
+queryExpr =
+    succeed identity
+        |= orExpr
+        |. end
 
 
 reservedChar : Set Char
