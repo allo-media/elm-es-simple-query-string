@@ -106,7 +106,7 @@ orExprHelp state =
 
 parse : String -> Result (List DeadEnd) Expr
 parse string =
-    run orExpr string
+    run queryExpr string
 
 
 prefixOrWord : Parser Expr
@@ -136,6 +136,13 @@ pureExclude =
         |. symbol "-"
         |. spaces
         |= groupExp
+
+
+queryExpr : Parser Expr
+queryExpr =
+    succeed identity
+        |= orExpr
+        |. end
 
 
 reservedChar : Set Char

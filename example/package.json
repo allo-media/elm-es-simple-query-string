@@ -4,7 +4,7 @@
   "description": "Parsing test",
   "main": "index.js",
   "scripts": {
-    "start": "npm run elm-repo-priv && elm-live src/Main.elm --port=3000 --dir=public/ -- --output=public/app.js",
+    "start": "elm-live src/Main.elm --port=3000 --dir=public/ -- --output=public/app.js",
     "elm-repo-priv": "elm-git-install",
     "test": "elm-test"
   },
