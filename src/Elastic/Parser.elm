@@ -104,9 +104,16 @@ orExprHelp state =
         ]
 
 
+queryExpr : Parser Expr
+queryExpr =
+    succeed identity
+        |= orExpr
+        |. end
+
+
 parse : String -> Result (List DeadEnd) Expr
 parse string =
-    run orExpr string
+    run queryExpr string
 
 
 prefixOrWord : Parser Expr
