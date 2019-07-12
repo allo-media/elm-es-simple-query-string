@@ -5,11 +5,6 @@ import Elastic as Elastic
 import Html exposing (..)
 
 
-
--- Check unicode
--- apostophre, tiret.
-
-
 type alias Model =
     {}
 
@@ -23,7 +18,7 @@ view : Model -> Html msg
 view model =
     let
         parsing =
-            Elastic.parseQuery "((\"personne me\" (rappelle | recontacte | téléphone) -\"cette personne\" -\"la personne\" -\"une personne\")) | (\"personne ne m'a\" (rappelé | recontacté | téléphoné)) | ((\"m'a\" | \"m'ont\" | \"m'avez\") (jamais | pas) (rappelé | recontacté | téléphoné)) | ((\"devait\" | \"deviez\") ((\"me\" | \"m'\") (\"appeler\" | \"rappeler\" | \"recontacter\" | \"téléphoner\")) | (\"demandé à\" | \"allais\" | \"devais\") \"être\" (\"rappelé\" | \"recontacté\") | \"toujours pas eu d'appel\")"
+            Elastic.parseQuery "big* (potatoes|\"french fries\") -salad"
     in
     case parsing of
         Ok value ->
