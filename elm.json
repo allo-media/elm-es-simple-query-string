@@ -3,7 +3,7 @@
     "name": "allo-media/elm-es-simple-query-string",
     "summary": "Parse and serialize an simple query string elastic",
     "license": "MIT",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "exposed-modules": [
         "Elastic",
         "Elastic.Expression"
