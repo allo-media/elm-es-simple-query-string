@@ -69,5 +69,9 @@ suite =
                 \_ ->
                     parseQuery "big -mac)"
                         |> Expect.err
+            , test "should failed with (hello)bye" <|
+                \_ ->
+                    parseQuery "(hello)bye"
+                        |> Expect.err
             ]
         ]

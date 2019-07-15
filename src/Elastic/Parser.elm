@@ -7,16 +7,15 @@ import Set exposing (Set)
 
 andExpr : Parser Expr
 andExpr =
-    loop (Word "") andExprHelp
-        |> andThen checkIfWordIsEmpty
+    excludeExpr
+        |> andThen
+            (\expr -> loop expr andExprHelp)
 
 
 andExprHelp : Expr -> Parser (Step Expr Expr)
 andExprHelp state =
     oneOf
-        [ succeed Loop
-            |= excludeExpr
-        , succeed (Loop << And state)
+        [ succeed (Loop << And state)
             |. backtrackable
                 (variable
                     { start = \c -> c == '+' || c == ' '
@@ -28,15 +27,6 @@ andExprHelp state =
         , succeed ()
             |> map (\_ -> Done state)
         ]
-
-
-checkIfWordIsEmpty : Expr -> Parser Expr
-checkIfWordIsEmpty expr =
-    if expr == Word "" then
-        problem "Empty Word expression."
-
-    else
-        succeed expr
 
 
 exactExpr : Parser Expr
@@ -67,7 +57,7 @@ groupExp =
         , succeed identity
             |. symbol "("
             |. spaces
-            |= orExpr
+            |= lazy (\_ -> orExpr)
             |. spaces
             |. symbol ")"
         ]
@@ -82,8 +72,9 @@ isWordChar char =
 
 orExpr : Parser Expr
 orExpr =
-    loop (Word "") orExprHelp
-        |> andThen checkIfWordIsEmpty
+    andExpr
+        |> andThen
+            (\expr -> loop expr orExprHelp)
 
 
 orExprHelp : Expr -> Parser (Step Expr Expr)
@@ -96,8 +87,6 @@ orExprHelp state =
             |. backtrackable spaces
             |. symbol "|"
             |. spaces
-            |= andExpr
-        , succeed Loop
             |= andExpr
         , succeed ()
             |> map (\_ -> Done state)

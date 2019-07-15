@@ -1,6 +1,6 @@
 {
   "name": "elm-es-simple-query-string",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "elm elastic simple query string parser and serializer",
   "main": "index.js",
   "private": true,
