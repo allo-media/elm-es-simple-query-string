@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run copy-assets && elm make src/Main.elm --output=build/app.js",
     "copy-assets": "rimraf build && mkdir build && cp -r public/* build",
-    "deploy": "npm run build && gh-pages --dist build/"
+    "deploy": "npm run build && gh-pages --dist build/",
     "start": "elm-live src/Main.elm --port=3000 --dir=public/ -- --output=public/app.js",
     "test": "elm-test"
   },
