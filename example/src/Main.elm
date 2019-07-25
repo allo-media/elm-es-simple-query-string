@@ -2,42 +2,59 @@ module Main exposing (main)
 
 import Browser
 import Elastic as Elastic
+import Elastic.Expression exposing (Expr(..))
 import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import Parser exposing (DeadEnd)
 
 
 type alias Model =
-    {}
+    { query : Result (List DeadEnd) Expr }
 
 
 init : Model
 init =
-    {}
+    { query = Ok (Word "") }
 
 
-view : Model -> Html msg
+type Msg
+    = Parse (Result (List DeadEnd) Expr)
+
+
+view : Model -> Html Msg
 view model =
-    let
-        parsing =
-            Elastic.parseQuery "big* (potatoes|\"french fries\") -salad"
-    in
-    case parsing of
-        Ok value ->
-            div []
-                [ Elastic.serializeExpr value |> text
-                , hr [] []
-                , Debug.toString value |> text
-                ]
+    div []
+        [ input [ onInput (Parse << Elastic.parseQuery) ] []
+        , div []
+            [ case model.query of
+                Ok value ->
+                    div []
+                        [ text "ExplicitOr: True"
+                        , br [] []
+                        , Elastic.serializeExpr { explicitOr = True } value |> text
+                        , hr [] []
+                        , text "ExplicitOr: False"
+                        , br [] []
+                        , Elastic.serializeExpr { explicitOr = False } value |> text
+                        , hr [] []
+                        , Debug.toString value |> text
+                        ]
 
-        Err err ->
-            Debug.toString err |> text
+                Err err ->
+                    Debug.toString err |> text
+            ]
+        ]
 
 
-update : msg -> Model -> Model
-update _ model =
-    model
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
+        Parse result ->
+            { model | query = result }
 
 
-main : Program () Model msg
+main : Program () Model Msg
 main =
     Browser.sandbox
         { init = init

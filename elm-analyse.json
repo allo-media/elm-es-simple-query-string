@@ -6,6 +6,7 @@
         "ImportAll": false,
         "RedefineVariable": false,
         "TriggerWords": false,
-        "UseConsOverConcat": false
+        "UseConsOverConcat": false,
+        "SingleFieldRecord": false
     }
 }
