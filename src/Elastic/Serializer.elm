@@ -1,50 +1,58 @@
-module Elastic.Serializer exposing (run)
+module Elastic.Serializer exposing (Config, run)
 
 import Elastic.Expression exposing (Expr(..))
 
 
-group : Expr -> String
-group expr =
-    "(" ++ run expr ++ ")"
+type alias Config =
+    { explicitOr : Bool }
 
 
-and : Expr -> String
-and expr =
+group : Config -> Expr -> String
+group config expr =
+    "(" ++ run config expr ++ ")"
+
+
+and : Config -> Expr -> String
+and config expr =
     case expr of
         Or _ _ ->
-            group expr
+            group config expr
 
         _ ->
-            run expr
+            run config expr
 
 
-exclude : Expr -> String
-exclude expr =
+exclude : Config -> Expr -> String
+exclude config expr =
     case expr of
         And _ _ ->
-            group expr
+            group config expr
 
         Or _ _ ->
-            group expr
+            group config expr
 
         _ ->
-            run expr
+            run config expr
 
 
-run : Expr -> String
-run expr =
+run : Config -> Expr -> String
+run config expr =
     case expr of
         And expr_ expr2 ->
-            and expr_ ++ " " ++ and expr2
+            and config expr_ ++ " " ++ and config expr_
 
         Exclude expr_ ->
-            "-" ++ exclude expr_
+            "-" ++ exclude config expr_
 
         Exact string ->
             "\"" ++ string ++ "\""
 
         Or expr_ expr2 ->
-            run expr_ ++ "|" ++ run expr2
+            if config.explicitOr then
+                "(" ++ run config expr_ ++ ") | (" ++ run config expr2 ++ ")"
+
+            else
+                run config expr_ ++ " | " ++ run config expr2
 
         Prefix string ->
             string ++ "*"
