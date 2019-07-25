@@ -5604,54 +5604,66 @@ var author$project$Elastic$parseQuery = function (rawQuery) {
 	return author$project$Elastic$Parser$parse(
 		elm$core$String$trim(rawQuery));
 };
+var author$project$Elastic$Serializer$Config = function (a) {
+	return {$: 'Config', a: a};
+};
 var elm$core$Basics$append = _Utils_append;
-var author$project$Elastic$Serializer$and = function (expr) {
-	if (expr.$ === 'Or') {
-		return author$project$Elastic$Serializer$group(expr);
-	} else {
-		return author$project$Elastic$Serializer$run(expr);
-	}
-};
-var author$project$Elastic$Serializer$exclude = function (expr) {
-	switch (expr.$) {
-		case 'And':
-			return author$project$Elastic$Serializer$group(expr);
-		case 'Or':
-			return author$project$Elastic$Serializer$group(expr);
-		default:
-			return author$project$Elastic$Serializer$run(expr);
-	}
-};
-var author$project$Elastic$Serializer$group = function (expr) {
-	return '(' + (author$project$Elastic$Serializer$run(expr) + ')');
-};
-var author$project$Elastic$Serializer$run = function (expr) {
-	switch (expr.$) {
-		case 'And':
-			var expr_ = expr.a;
-			var expr2 = expr.b;
-			return author$project$Elastic$Serializer$and(expr_) + (' ' + author$project$Elastic$Serializer$and(expr2));
-		case 'Exclude':
-			var expr_ = expr.a;
-			return '-' + author$project$Elastic$Serializer$exclude(expr_);
-		case 'Exact':
-			var string = expr.a;
-			return '\"' + (string + '\"');
-		case 'Or':
-			var expr_ = expr.a;
-			var expr2 = expr.b;
-			return author$project$Elastic$Serializer$run(expr_) + ('|' + author$project$Elastic$Serializer$run(expr2));
-		case 'Prefix':
-			var string = expr.a;
-			return string + '*';
-		default:
-			var string = expr.a;
-			return string;
-	}
-};
-var author$project$Elastic$serializeExpr = function (expr) {
-	return author$project$Elastic$Serializer$run(expr);
-};
+var author$project$Elastic$Serializer$and = F2(
+	function (config, expr) {
+		if (expr.$ === 'Or') {
+			return A2(author$project$Elastic$Serializer$group, config, expr);
+		} else {
+			return A2(author$project$Elastic$Serializer$run, config, expr);
+		}
+	});
+var author$project$Elastic$Serializer$exclude = F2(
+	function (config, expr) {
+		switch (expr.$) {
+			case 'And':
+				return A2(author$project$Elastic$Serializer$group, config, expr);
+			case 'Or':
+				return A2(author$project$Elastic$Serializer$group, config, expr);
+			default:
+				return A2(author$project$Elastic$Serializer$run, config, expr);
+		}
+	});
+var author$project$Elastic$Serializer$group = F2(
+	function (config, expr) {
+		return '(' + (A2(author$project$Elastic$Serializer$run, config, expr) + ')');
+	});
+var author$project$Elastic$Serializer$run = F2(
+	function (config, expr) {
+		var explicitOr = config.a.explicitOr;
+		switch (expr.$) {
+			case 'And':
+				var expr_ = expr.a;
+				var expr2 = expr.b;
+				return A2(author$project$Elastic$Serializer$and, config, expr_) + (' ' + A2(author$project$Elastic$Serializer$and, config, expr2));
+			case 'Exclude':
+				var expr_ = expr.a;
+				return '-' + A2(author$project$Elastic$Serializer$exclude, config, expr_);
+			case 'Exact':
+				var string = expr.a;
+				return '\"' + (string + '\"');
+			case 'Or':
+				var expr_ = expr.a;
+				var expr2 = expr.b;
+				return explicitOr ? ('(' + (A2(author$project$Elastic$Serializer$run, config, expr_) + (') | (' + (A2(author$project$Elastic$Serializer$run, config, expr2) + ')')))) : (A2(author$project$Elastic$Serializer$run, config, expr_) + (' | ' + A2(author$project$Elastic$Serializer$run, config, expr2)));
+			case 'Prefix':
+				var string = expr.a;
+				return string + '*';
+			default:
+				var string = expr.a;
+				return string;
+		}
+	});
+var author$project$Elastic$serializeExpr = F2(
+	function (config, expr) {
+		return A2(
+			author$project$Elastic$Serializer$run,
+			author$project$Elastic$Serializer$Config(config),
+			expr);
+	});
 var author$project$Main$Parse = function (a) {
 	return {$: 'Parse', a: a};
 };
@@ -6018,6 +6030,7 @@ var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 			return 3;
 	}
 };
+var elm$html$Html$br = _VirtualDom_node('br');
 var elm$html$Html$div = _VirtualDom_node('div');
 var elm$html$Html$hr = _VirtualDom_node('hr');
 var elm$html$Html$input = _VirtualDom_node('input');
@@ -6085,8 +6098,21 @@ var author$project$Main$view = function (model) {
 								_List_Nil,
 								_List_fromArray(
 									[
+										elm$html$Html$text('ExplicitOr: True'),
+										A2(elm$html$Html$br, _List_Nil, _List_Nil),
 										elm$html$Html$text(
-										author$project$Elastic$serializeExpr(value)),
+										A2(
+											author$project$Elastic$serializeExpr,
+											{explicitOr: true},
+											value)),
+										A2(elm$html$Html$hr, _List_Nil, _List_Nil),
+										elm$html$Html$text('ExplicitOr: False'),
+										A2(elm$html$Html$br, _List_Nil, _List_Nil),
+										elm$html$Html$text(
+										A2(
+											author$project$Elastic$serializeExpr,
+											{explicitOr: false},
+											value)),
 										A2(elm$html$Html$hr, _List_Nil, _List_Nil),
 										elm$html$Html$text(
 										elm$core$Debug$toString(value))
