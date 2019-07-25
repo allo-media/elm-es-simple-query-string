@@ -3,11 +3,14 @@ module Elastic exposing
     , serializeExpr
     )
 
-{-| Elm simple elastic query parser & serializer
+{-| Parse and serialize [ElasticSearch](https://www.elastic.co/en) search query strings.
 
-This package allow to parse an [elastic simple query string](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html#_simple_query_string_syntax) into an AST.
+This package allows to parse an [elastic simple query string](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html#_simple_query_string_syntax)
+into an [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 
-`~N` tokenizer are not supported.
+**Notes:**
+
+  - `~N` operator is not supported.
 
 
 # Parser
@@ -27,7 +30,8 @@ import Elastic.Serializer as Serializer exposing (run)
 import Parser exposing (DeadEnd)
 
 
-{-| parse an elastic simple query string and convert into an AST
+{-| Parse an ElasticSearch search query string and convert it into an
+[AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 -}
 parseQuery : String -> Result (List DeadEnd) Expr
 parseQuery rawQuery =
@@ -36,14 +40,14 @@ parseQuery rawQuery =
         |> parse
 
 
-{-| serialize an AST into simple query string for elastic search
+{-| Serialize an [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree) into
+an ElasticSearch search query string.
 
-Nit: explicitOr bool parameter allow to serialize explicitly Or Expr with parenthis.
-For Elastic search, this 2 kind of query, are not the same :
-("john" "doe") | ("doe" "john")
-"john" "doe" | "doe" "john"
+Options:
 
-The priority order are different.
+  - `explicitOr`: wraps groups with parenthesis to explicit operator precedence.
+    This is useful for ambiguous queries like `foo bar | foo baz` which should better
+    be treated as `(foo bar) | (foo baz)`.
 
 -}
 serializeExpr : Bool -> Expr -> String
