@@ -4,7 +4,7 @@ import Elastic.Expression exposing (Expr(..))
 
 
 type Config
-    = Config Bool
+    = Config { explicitOr : Bool }
 
 
 group : Config -> Expr -> String
@@ -36,7 +36,7 @@ exclude config expr =
 
 
 run : Config -> Expr -> String
-run ((Config explicitOr) as config) expr =
+run ((Config { explicitOr }) as config) expr =
     case expr of
         And expr_ expr2 ->
             and config expr_ ++ " " ++ and config expr2
