@@ -8,7 +8,7 @@ import Test exposing (..)
 
 serializeExpr_ : Expr -> String
 serializeExpr_ expr =
-    serializeExpr { explicitOr = False } expr
+    serializeExpr False expr
 
 
 suite : Test

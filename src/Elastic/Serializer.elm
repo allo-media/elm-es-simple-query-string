@@ -49,10 +49,10 @@ run ((Config explicitOr) as config) expr =
 
         Or expr_ expr2 ->
             if explicitOr then
-                "(" ++ run config expr_ ++ ") | (" ++ run config expr2 ++ ")"
+                "(" ++ run config expr_ ++ ")|(" ++ run config expr2 ++ ")"
 
             else
-                run config expr_ ++ " | " ++ run config expr2
+                run config expr_ ++ "|" ++ run config expr2
 
         Prefix string ->
             string ++ "*"
