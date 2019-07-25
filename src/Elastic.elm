@@ -51,5 +51,5 @@ Options:
 
 -}
 serializeExpr : { explicitOr : Bool } -> Expr -> String
-serializeExpr { explicitOr } expr =
-    run (Serializer.Config explicitOr) expr
+serializeExpr config expr =
+    run (Serializer.Config config) expr

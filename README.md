@@ -6,6 +6,8 @@ This package allow to parse an [elastic simple query string](https://www.elastic
 
 At this time, the default operator for elastic must be set to "AND" in elastic search services.
 
+[Demo](https://allo-media.github.io/elm-es-simple-query-string/)
+
 ## Alphabet
 
 * ( ) Group
