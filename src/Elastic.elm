@@ -50,6 +50,6 @@ Options:
     be treated as `(foo bar) | (foo baz)`.
 
 -}
-serializeExpr : Bool -> Expr -> String
-serializeExpr explicitOr expr =
+serializeExpr : { explicitOr : Bool } -> Expr -> String
+serializeExpr { explicitOr } expr =
     run (Serializer.Config explicitOr) expr
