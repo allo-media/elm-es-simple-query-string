@@ -1,10 +1,10 @@
-module Elastic.Serializer exposing (Config, run)
+module Elastic.Serializer exposing (Config(..), run)
 
 import Elastic.Expression exposing (Expr(..))
 
 
-type alias Config =
-    { explicitOr : Bool }
+type Config
+    = Config Bool
 
 
 group : Config -> Expr -> String
@@ -36,10 +36,10 @@ exclude config expr =
 
 
 run : Config -> Expr -> String
-run config expr =
+run ((Config explicitOr) as config) expr =
     case expr of
         And expr_ expr2 ->
-            and config expr_ ++ " " ++ and config expr_
+            and config expr_ ++ " " ++ and config expr2
 
         Exclude expr_ ->
             "-" ++ exclude config expr_
@@ -48,7 +48,7 @@ run config expr =
             "\"" ++ string ++ "\""
 
         Or expr_ expr2 ->
-            if config.explicitOr then
+            if explicitOr then
                 "(" ++ run config expr_ ++ ") | (" ++ run config expr2 ++ ")"
 
             else

@@ -23,7 +23,7 @@ This package allow to parse an [elastic simple query string](https://www.elastic
 
 import Elastic.Expression exposing (Expr)
 import Elastic.Parser exposing (parse)
-import Elastic.Serializer exposing (Config, run)
+import Elastic.Serializer as Serializer exposing (run)
 import Parser exposing (DeadEnd)
 
 
@@ -38,6 +38,6 @@ parseQuery rawQuery =
 
 {-| serialize an AST into simple query string for elastic search
 -}
-serializeExpr : Config -> Expr -> String
-serializeExpr config expr =
-    run config expr
+serializeExpr : Bool -> Expr -> String
+serializeExpr bool expr =
+    run (Serializer.Config bool) expr
