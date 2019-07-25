@@ -39,7 +39,11 @@ suite =
                 \_ ->
                     serializeExpr_ (And (Word "hamburger") (Prefix "cheese"))
                         |> Expect.equal "hamburger cheese*"
-            , test "should serialize a Or exression into string" <|
+            , test "should serialize a Or expression with implicit parenthesis into string" <|
+                \_ ->
+                    serializeExpr True (Or (Prefix "bread") (Exclude (Word "vegetable")))
+                        |> Expect.equal "(bread*)|(-vegetable)"
+            , test "should serialize a Or expression with explicit parenthesis into string" <|
                 \_ ->
                     serializeExpr_ (Or (Prefix "bread") (Exclude (Word "vegetable")))
                         |> Expect.equal "bread*|-vegetable"
