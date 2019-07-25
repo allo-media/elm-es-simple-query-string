@@ -34,7 +34,7 @@ suite =
             , test "should serialize an Exclude expression with a group expression into string" <|
                 \_ ->
                     serializeExpr_ (Exclude (Or (Prefix "big") (Exact "french fries")))
-                        |> Expect.equal "-(big*|\"french fries\")"
+                        |> Expect.equal "-(big* | \"french fries\")"
             , test "should serialize an And Expression into string" <|
                 \_ ->
                     serializeExpr_ (And (Word "hamburger") (Prefix "cheese"))
@@ -42,14 +42,14 @@ suite =
             , test "should serialize a Or expression with explicit parenthesis into string" <|
                 \_ ->
                     serializeExpr True (Or (Prefix "bread") (Exclude (Word "vegetable")))
-                        |> Expect.equal "(bread*)|(-vegetable)"
+                        |> Expect.equal "(bread*) | (-vegetable)"
             , test "should serialize a Or expression with implicit parenthesis into string" <|
                 \_ ->
                     serializeExpr_ (Or (Prefix "bread") (Exclude (Word "vegetable")))
-                        |> Expect.equal "bread*|-vegetable"
+                        |> Expect.equal "bread* | -vegetable"
             , test "should serialize a group expression into a string" <|
                 \_ ->
                     serializeExpr_ (And (Prefix "big") (Or (Word "potatoes") (Exact "french fries")))
-                        |> Expect.equal "big* (potatoes|\"french fries\")"
+                        |> Expect.equal "big* (potatoes | \"french fries\")"
             ]
         ]
