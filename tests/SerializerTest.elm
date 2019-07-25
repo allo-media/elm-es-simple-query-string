@@ -8,12 +8,12 @@ import Test exposing (..)
 
 serializeExprWithExplicitOr : Expr -> String
 serializeExprWithExplicitOr expr =
-    serializeExpr True expr
+    serializeExpr { explicitOr = True } expr
 
 
 serializeExprWithOutExplicitOr : Expr -> String
 serializeExprWithOutExplicitOr expr =
-    serializeExpr False expr
+    serializeExpr { explicitOr = False } expr
 
 
 suite : Test
