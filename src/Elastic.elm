@@ -37,7 +37,15 @@ parseQuery rawQuery =
 
 
 {-| serialize an AST into simple query string for elastic search
+
+Nit: explicitOr bool parameter allow to serialize explicitly Or Expr with parenthis.
+For Elastic search, this 2 kind of query, are not the same :
+("john" "doe") | ("doe" "john")
+"john" "doe" | "doe" "john"
+
+The priority order are different.
+
 -}
 serializeExpr : Bool -> Expr -> String
-serializeExpr bool expr =
-    run (Serializer.Config bool) expr
+serializeExpr explicitOr expr =
+    run (Serializer.Config explicitOr) expr
