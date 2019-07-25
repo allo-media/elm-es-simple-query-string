@@ -30,7 +30,13 @@ view model =
             [ case model.query of
                 Ok value ->
                     div []
-                        [ Elastic.serializeExpr value |> text
+                        [ text "ExplicitOr: True"
+                        , br [] []
+                        , Elastic.serializeExpr { explicitOr = True } value |> text
+                        , hr [] []
+                        , text "ExplicitOr: False"
+                        , br [] []
+                        , Elastic.serializeExpr { explicitOr = False } value |> text
                         , hr [] []
                         , Debug.toString value |> text
                         ]
