@@ -1,7 +1,7 @@
 {
     "type": "package",
     "name": "allo-media/elm-es-simple-query-string",
-    "summary": "Parse and serialize an simple query string elastic",
+    "summary": "Parse and serialize ElasticSearch search strings.",
     "license": "MIT",
     "version": "1.0.0",
     "exposed-modules": [
