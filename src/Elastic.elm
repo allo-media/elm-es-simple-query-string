@@ -12,6 +12,8 @@ into an [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 
   - `~N` operator is not supported.
 
+[Demo](https://allo-media.github.io/elm-es-simple-query-string/)
+
 
 # Parser
 
