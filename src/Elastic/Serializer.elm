@@ -9,14 +9,9 @@ type Config
 
 group : Config -> Expr -> String
 group config expr =
-    "(" ++ run config expr ++ ")"
-
-
-and : Config -> Expr -> String
-and config expr =
     case expr of
         Or _ _ ->
-            group config expr
+            "(" ++ run config expr ++ ")"
 
         _ ->
             run config expr
@@ -38,21 +33,17 @@ exclude config expr =
 run : Config -> Expr -> String
 run ((Config { explicitOr }) as config) expr =
     case expr of
-        And expr_ expr2 ->
-            and config expr_ ++ " " ++ and config expr2
+        And first second ->
+            group config first ++ " " ++ group config second
 
-        Exclude expr_ ->
-            "-" ++ exclude config expr_
+        Exclude first ->
+            "-" ++ exclude config first
 
         Exact string ->
             "\"" ++ string ++ "\""
 
-        Or expr_ expr2 ->
-            if explicitOr then
-                "(" ++ run config expr_ ++ ") | (" ++ run config expr2 ++ ")"
-
-            else
-                run config expr_ ++ " | " ++ run config expr2
+        Or first second ->
+            group config first ++ " | " ++ group config second
 
         Prefix string ->
             string ++ "*"

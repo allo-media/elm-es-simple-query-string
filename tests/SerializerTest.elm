@@ -7,13 +7,13 @@ import Test exposing (..)
 
 
 serializeExprWithExplicitOr : Expr -> String
-serializeExprWithExplicitOr expr =
-    serializeExpr { explicitOr = True } expr
+serializeExprWithExplicitOr =
+    serializeExpr { explicitOr = True }
 
 
 serializeExprWithOutExplicitOr : Expr -> String
-serializeExprWithOutExplicitOr expr =
-    serializeExpr { explicitOr = False } expr
+serializeExprWithOutExplicitOr =
+    serializeExpr { explicitOr = False }
 
 
 suite : Test
@@ -39,7 +39,7 @@ suite =
             , test "should serialize an Exclude expression with a group expression into string" <|
                 \_ ->
                     serializeExprWithExplicitOr (Exclude (Or (Prefix "big") (Exact "french fries")))
-                        |> Expect.equal "-((big*) | (\"french fries\"))"
+                        |> Expect.equal "-(big* | \"french fries\")"
             , test "should serialize an And Expression into string" <|
                 \_ ->
                     serializeExprWithExplicitOr (And (Word "hamburger") (Prefix "cheese"))
@@ -47,11 +47,26 @@ suite =
             , test "should serialize a Or expression with implicit parenthesis into string" <|
                 \_ ->
                     serializeExprWithExplicitOr (Or (Prefix "bread") (Exclude (Word "vegetable")))
-                        |> Expect.equal "(bread*) | (-vegetable)"
+                        |> Expect.equal "bread* | -vegetable"
             , test "should serialize a group expression into a string" <|
                 \_ ->
                     serializeExprWithExplicitOr (And (Prefix "big") (Or (Word "potatoes") (Exact "french fries")))
-                        |> Expect.equal "big* ((potatoes) | (\"french fries\"))"
+                        |> Expect.equal "big* (potatoes | \"french fries\")"
+            , test "should serialize a nested AND group expression into a string" <|
+                \_ ->
+                    serializeExprWithExplicitOr (Or (Prefix "big") (And (Word "potatoes") (And (Word "ketchup") (Word "mayo"))))
+                        |> Expect.equal "big* | potatoes ketchup mayo"
+            , test "should serialize a nested OR group expression into a string" <|
+                \_ ->
+                    serializeExprWithExplicitOr
+                        (And
+                            (Or (Word "potatoes") (Word "fries"))
+                            (And
+                                (Word "onions")
+                                (Or (Word "ketchup") (Word "mayo"))
+                            )
+                        )
+                        |> Expect.equal "(potatoes | fries) onions (ketchup | mayo)"
             ]
         , describe "serializeExpr without explicitOr"
             [ test "should serialize an Word expression into string" <|
@@ -86,5 +101,20 @@ suite =
                 \_ ->
                     serializeExprWithOutExplicitOr (And (Prefix "big") (Or (Word "potatoes") (Exact "french fries")))
                         |> Expect.equal "big* (potatoes | \"french fries\")"
+            , test "should serialize a nested AND group expression into a string" <|
+                \_ ->
+                    serializeExprWithOutExplicitOr (Or (Prefix "big") (And (Word "potatoes") (And (Word "ketchup") (Word "mayo"))))
+                        |> Expect.equal "big* | potatoes ketchup mayo"
+            , test "should serialize a nested OR group expression into a string" <|
+                \_ ->
+                    serializeExprWithOutExplicitOr
+                        (And
+                            (Or (Word "potatoes") (Word "fries"))
+                            (And
+                                (Word "onions")
+                                (Or (Word "ketchup") (Word "mayo"))
+                            )
+                        )
+                        |> Expect.equal "(potatoes | fries) onions (ketchup | mayo)"
             ]
         ]
