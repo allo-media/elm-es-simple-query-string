@@ -1,58 +1,48 @@
-module Elastic.Serializer exposing (Config(..), run)
+module Elastic.Serializer exposing (run)
 
 import Elastic.Expression exposing (Expr(..))
 
 
-type Config
-    = Config { explicitOr : Bool }
-
-
-group : Config -> Expr -> String
-group config expr =
-    "(" ++ run config expr ++ ")"
-
-
-and : Config -> Expr -> String
-and config expr =
+group : Expr -> String
+group expr =
     case expr of
-        Or _ _ ->
-            group config expr
+        And _ ->
+            "(" ++ run expr ++ ")"
+
+        Or _ ->
+            "(" ++ run expr ++ ")"
 
         _ ->
-            run config expr
+            run expr
 
 
-exclude : Config -> Expr -> String
-exclude config expr =
+exclude : Expr -> String
+exclude expr =
     case expr of
-        And _ _ ->
-            group config expr
+        And _ ->
+            group expr
 
-        Or _ _ ->
-            group config expr
+        Or _ ->
+            group expr
 
         _ ->
-            run config expr
+            run expr
 
 
-run : Config -> Expr -> String
-run ((Config { explicitOr }) as config) expr =
+run : Expr -> String
+run expr =
     case expr of
-        And expr_ expr2 ->
-            and config expr_ ++ " " ++ and config expr2
+        And children ->
+            children |> List.map group |> String.join " "
 
-        Exclude expr_ ->
-            "-" ++ exclude config expr_
+        Exclude first ->
+            "-" ++ exclude first
 
         Exact string ->
             "\"" ++ string ++ "\""
 
-        Or expr_ expr2 ->
-            if explicitOr then
-                "(" ++ run config expr_ ++ ") | (" ++ run config expr2 ++ ")"
-
-            else
-                run config expr_ ++ " | " ++ run config expr2
+        Or children ->
+            children |> List.map group |> String.join " | "
 
         Prefix string ->
             string ++ "*"

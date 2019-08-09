@@ -40,26 +40,32 @@ suite =
             , test "should return an OR expression" <|
                 \_ ->
                     parseQuery "tomatoes | cheese"
-                        |> expect (Or (Word "tomatoes") (Word "cheese")) "Error to parse Or expression"
+                        |> expect (Or [ Word "tomatoes", Word "cheese" ]) "Error to parse Or expression"
             , describe "should return an And expression"
                 [ test "with spaces as delimiter" <|
                     \_ ->
                         parseQuery "tomatoes cheese"
-                            |> expect (And (Word "tomatoes") (Word "cheese")) "Error to parse And expression with spaces as delimiter"
+                            |> expect (And [ Word "tomatoes", Word "cheese" ]) "Error to parse And expression with spaces as delimiter"
                 , test "with + as delimiter" <|
                     \_ ->
                         parseQuery "tomatoes + cheese"
-                            |> expect (And (Word "tomatoes") (Word "cheese")) "Error to parse And expression with + as delimiter"
+                            |> expect (And [ Word "tomatoes", Word "cheese" ]) "Error to parse And expression with + as delimiter"
                 ]
             , describe "should return a group of expression"
                 [ test "with no spaces between expression" <|
                     \_ ->
                         parseQuery "tomatoes (cheese | pickle)"
-                            |> expect (And (Word "tomatoes") (Or (Word "cheese") (Word "pickle"))) "Error to parse a group of expression with no spaces between expression"
+                            |> expect (And [ Word "tomatoes", Or [ Word "cheese", Word "pickle" ] ]) "Error to parse a group of expression with no spaces between expression"
                 , test "with spaces between expression" <|
                     \_ ->
                         parseQuery "( ( \"demandé à\" | \"allais\" | \"devais\" ) \"être\" )"
-                            |> expect (And (Or (Or (Exact "demandé à") (Exact "allais")) (Exact "devais")) (Exact "être")) "Error to parse"
+                            |> expect
+                                (And
+                                    [ Or [ Exact "demandé à", Exact "allais", Exact "devais" ]
+                                    , Exact "être"
+                                    ]
+                                )
+                                "Error to parse"
                 ]
             , test "should failed if the string is empty" <|
                 \_ ->
@@ -73,5 +79,9 @@ suite =
                 \_ ->
                     parseQuery "(hello)bye"
                         |> Expect.err
+            , test "should handle ambiguous operator precendence" <|
+                \_ ->
+                    parseQuery "a b | a c"
+                        |> Expect.equal (Ok (Or [ And [ Word "a", Word "b" ], And [ Word "a", Word "c" ] ]))
             ]
         ]

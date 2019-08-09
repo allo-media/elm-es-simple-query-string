@@ -1,19 +1,20 @@
 module Elastic.Parser exposing (parse)
 
-import Elastic.Expression exposing (Expr(..))
+import Elastic.Ast as Ast exposing (Ast(..))
+import Elastic.Expression exposing (Expr)
 import Parser exposing (..)
 import Set exposing (Set)
 
 
-andExpr : Parser Expr
-andExpr =
-    excludeExpr
+andAst : Parser Ast
+andAst =
+    excludeAst
         |> andThen
-            (\expr -> loop expr andExprHelp)
+            (\expr -> loop expr andAstHelp)
 
 
-andExprHelp : Expr -> Parser (Step Expr Expr)
-andExprHelp state =
+andAstHelp : Ast -> Parser (Step Ast Ast)
+andAstHelp state =
     oneOf
         [ succeed (Loop << And state)
             |. backtrackable
@@ -23,14 +24,14 @@ andExprHelp state =
                     , reserved = Set.fromList []
                     }
                 )
-            |= excludeExpr
+            |= excludeAst
         , succeed ()
             |> map (\_ -> Done state)
         ]
 
 
-exactExpr : Parser Expr
-exactExpr =
+exactAst : Parser Ast
+exactAst =
     succeed Exact
         |. symbol "\""
         |= variable
@@ -41,23 +42,23 @@ exactExpr =
         |. symbol "\""
 
 
-excludeExpr : Parser Expr
-excludeExpr =
+excludeAst : Parser Ast
+excludeAst =
     oneOf
         [ pureExclude
         , groupExp
         ]
 
 
-groupExp : Parser Expr
+groupExp : Parser Ast
 groupExp =
     oneOf
-        [ exactExpr
+        [ exactAst
         , prefixOrWord
         , succeed identity
             |. symbol "("
             |. spaces
-            |= lazy (\_ -> orExpr)
+            |= lazy (\_ -> orAst)
             |. spaces
             |. symbol ")"
         ]
@@ -70,15 +71,15 @@ isWordChar char =
         |> not
 
 
-orExpr : Parser Expr
-orExpr =
-    andExpr
+orAst : Parser Ast
+orAst =
+    andAst
         |> andThen
-            (\expr -> loop expr orExprHelp)
+            (\expr -> loop expr orAstHelp)
 
 
-orExprHelp : Expr -> Parser (Step Expr Expr)
-orExprHelp state =
+orAstHelp : Ast -> Parser (Step Ast Ast)
+orAstHelp state =
     oneOf
         [ succeed ()
             |. end
@@ -87,7 +88,7 @@ orExprHelp state =
             |. backtrackable spaces
             |. symbol "|"
             |. spaces
-            |= andExpr
+            |= andAst
         , succeed ()
             |> map (\_ -> Done state)
         ]
@@ -95,10 +96,11 @@ orExprHelp state =
 
 parse : String -> Result (List DeadEnd) Expr
 parse string =
-    run queryExpr string
+    run queryAst string
+        |> Result.map Ast.toExpr
 
 
-prefixOrWord : Parser Expr
+prefixOrWord : Parser Ast
 prefixOrWord =
     succeed
         (\word hasSymbol ->
@@ -119,7 +121,7 @@ prefixOrWord =
             ]
 
 
-pureExclude : Parser Expr
+pureExclude : Parser Ast
 pureExclude =
     Parser.succeed Exclude
         |. symbol "-"
@@ -127,10 +129,10 @@ pureExclude =
         |= groupExp
 
 
-queryExpr : Parser Expr
-queryExpr =
+queryAst : Parser Ast
+queryAst =
     succeed identity
-        |= orExpr
+        |= orAst
         |. end
 
 
