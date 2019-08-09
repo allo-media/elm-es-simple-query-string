@@ -1,7 +1,6 @@
 module SerializerTest exposing (suite)
 
-import Elastic
-import Elastic.Expression exposing (Expr(..))
+import Elastic exposing (Expr(..))
 import Expect exposing (Expectation)
 import Test exposing (..)
 

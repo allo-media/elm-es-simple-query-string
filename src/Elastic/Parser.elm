@@ -1,9 +1,16 @@
-module Elastic.Parser exposing (parse)
+module Elastic.Parser exposing (Ast(..), parse)
 
-import Elastic.Ast as Ast exposing (Ast(..))
-import Elastic.Expression exposing (Expr)
 import Parser exposing (..)
 import Set exposing (Set)
+
+
+type Ast
+    = And Ast Ast
+    | Exact String
+    | Exclude Ast
+    | Or Ast Ast
+    | Prefix String
+    | Word String
 
 
 andAst : Parser Ast
@@ -94,10 +101,9 @@ orAstHelp state =
         ]
 
 
-parse : String -> Result (List DeadEnd) Expr
-parse string =
-    run queryAst string
-        |> Result.map Ast.toExpr
+parse : String -> Result (List DeadEnd) Ast
+parse =
+    run queryAst
 
 
 prefixOrWord : Parser Ast
