@@ -79,5 +79,9 @@ suite =
                 \_ ->
                     parseQuery "(hello)bye"
                         |> Expect.err
+            , test "should handle ambiguous operator precendence" <|
+                \_ ->
+                    parseQuery "a b | a c"
+                        |> Expect.equal (Ok (Or [ And [ Word "a", Word "b" ], And [ Word "a", Word "c" ] ]))
             ]
         ]

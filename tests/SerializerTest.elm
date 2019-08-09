@@ -44,7 +44,7 @@ suite =
         , test "should serialize a nested AND group expression into a string" <|
             \_ ->
                 Elastic.serialize (Or [ Prefix "big", And [ Word "potatoes", Word "ketchup", Word "mayo" ] ])
-                    |> Expect.equal "big* | potatoes ketchup mayo"
+                    |> Expect.equal "big* | (potatoes ketchup mayo)"
         , test "should serialize a nested OR group expression into a string" <|
             \_ ->
                 Elastic.serialize
@@ -56,5 +56,9 @@ suite =
                             ]
                         ]
                     )
-                    |> Expect.equal "(potatoes | fries) onions (ketchup | mayo)"
+                    |> Expect.equal "(potatoes | fries) (onions (ketchup | mayo))"
+        , test "should handle anbiguous operator precedence" <|
+            \_ ->
+                Elastic.serialize (Or [ And [ Word "a", Word "b" ], And [ Word "a", Word "c" ] ])
+                    |> Expect.equal "(a b) | (a c)"
         ]

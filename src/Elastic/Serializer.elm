@@ -6,6 +6,9 @@ import Elastic.Expression exposing (Expr(..))
 group : Expr -> String
 group expr =
     case expr of
+        And _ ->
+            "(" ++ run expr ++ ")"
+
         Or _ ->
             "(" ++ run expr ++ ")"
 
