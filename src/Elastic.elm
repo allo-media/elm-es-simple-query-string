@@ -1,6 +1,6 @@
 module Elastic exposing
     ( parseQuery
-    , serializeExpr
+    , serialize
     )
 
 {-| Parse and serialize [ElasticSearch](https://www.elastic.co/en) search query strings.
@@ -28,7 +28,7 @@ into an [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 
 import Elastic.Expression exposing (Expr)
 import Elastic.Parser exposing (parse)
-import Elastic.Serializer as Serializer exposing (run)
+import Elastic.Serializer as Serializer
 import Parser exposing (DeadEnd)
 
 
@@ -52,6 +52,6 @@ Options:
     be treated as `(foo bar) | (foo baz)`.
 
 -}
-serializeExpr : { explicitOr : Bool } -> Expr -> String
-serializeExpr config expr =
-    run (Serializer.Config config) expr
+serialize : Expr -> String
+serialize expr =
+    Serializer.run expr
