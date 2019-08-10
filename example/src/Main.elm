@@ -9,16 +9,18 @@ import Parser exposing (DeadEnd)
 
 
 type alias Model =
-    { query : Result (List DeadEnd) Expr }
+    { input : String
+    , query : Result (List DeadEnd) Expr
+    }
 
 
 init : Model
 init =
-    { query = Ok (Word "") }
+    { input = "", query = Elastic.parse "" }
 
 
 type Msg
-    = Parse (Result (List DeadEnd) Expr)
+    = UpdateInput String
 
 
 view : Model -> Html Msg
@@ -26,9 +28,10 @@ view model =
     div []
         [ h1 [] [ text "elm-es-simple-query" ]
         , input
-            [ onInput (Parse << Elastic.parse)
+            [ onInput UpdateInput
             , placeholder "Enter a search query"
             , size 100
+            , value model.input
             ]
             []
         , case model.query of
@@ -49,8 +52,8 @@ view model =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Parse result ->
-            { model | query = result }
+        UpdateInput input ->
+            { model | input = input, query = Elastic.parse input }
 
 
 main : Program () Model Msg

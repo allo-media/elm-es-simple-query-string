@@ -55,8 +55,15 @@ type Expr
 {-| Parse an ElasticSearch search query string and convert it into an [`Expr`](#Expr).
 -}
 parse : String -> Result (List DeadEnd) Expr
-parse =
-    String.trim >> Parser.parse >> Result.map toExpr
+parse string =
+    if String.trim string == "" then
+        Ok (And [])
+
+    else
+        string
+            |> String.trim
+            |> Parser.parse
+            |> Result.map toExpr
 
 
 

@@ -10,9 +10,8 @@ suite =
     describe "Elastic"
         [ describe "parse"
             [ Elastic.parse ""
-                -- FIXME: shouldn't we fallback to (Ok (Word ""))?
-                |> Expect.err
-                |> asTest "should fail with an empty string"
+                |> Expect.equal (Ok (And []))
+                |> asTest "should parse an empty string"
             , Elastic.parse "(a"
                 |> Expect.err
                 |> asTest "should fail with an non-terminated starting group"
