@@ -111,8 +111,8 @@ group expr_ =
             serialize expr_
 
 
-isAnd : Ast -> Maybe (List Ast)
-isAnd ast =
+andNodes : Ast -> Maybe (List Ast)
+andNodes ast =
     case ast of
         Parser.And a b ->
             Just [ a, b ]
@@ -121,8 +121,8 @@ isAnd ast =
             Nothing
 
 
-isOr : Ast -> Maybe (List Ast)
-isOr ast =
+orNodes : Ast -> Maybe (List Ast)
+orNodes ast =
     case ast of
         Parser.Or a b ->
             Just [ a, b ]
@@ -132,11 +132,11 @@ isOr ast =
 
 
 join : (Ast -> Maybe (List Ast)) -> List Expr -> List Ast -> List Expr
-join isOperator acc =
+join getNodes acc =
     List.map
         (\ast ->
-            isOperator ast
-                |> Maybe.map (join isOperator acc)
+            getNodes ast
+                |> Maybe.map (join getNodes acc)
                 |> Maybe.withDefault [ toExpr ast ]
         )
         >> List.concat
@@ -147,7 +147,7 @@ toExpr : Ast -> Expr
 toExpr expr =
     case expr of
         Parser.And first second ->
-            And (join isAnd [] [ first, second ])
+            And (join andNodes [] [ first, second ])
 
         Parser.Exact string ->
             Exact string
@@ -156,7 +156,7 @@ toExpr expr =
             Exclude (toExpr first)
 
         Parser.Or first second ->
-            Or (join isOr [] [ first, second ])
+            Or (join orNodes [] [ first, second ])
 
         Parser.Prefix string ->
             Prefix string
