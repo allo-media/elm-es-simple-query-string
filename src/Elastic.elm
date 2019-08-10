@@ -48,10 +48,6 @@ type Expr
     | Word String
 
 
-
--- Parser
-
-
 {-| Parse an ElasticSearch search query string and convert it into an [`Expr`](#Expr).
 -}
 parse : String -> Result (List DeadEnd) Expr
@@ -66,10 +62,6 @@ parse string =
             |> Result.map toExpr
 
 
-
--- Serializer
-
-
 {-| Serialize an [`Expr`](#Expr) to an ElasticSearch query string.
 
 Note: Operator precedence will be enforced by the use of parenthesis groups
@@ -78,18 +70,6 @@ everywhere applicable.
 -}
 serialize : Expr -> String
 serialize expr =
-    let
-        group expr_ =
-            case expr_ of
-                And _ ->
-                    "(" ++ serialize expr_ ++ ")"
-
-                Or _ ->
-                    "(" ++ serialize expr_ ++ ")"
-
-                _ ->
-                    serialize expr_
-    in
     case expr of
         And children ->
             children |> List.map group |> String.join " "
@@ -114,47 +94,60 @@ serialize expr =
 -- Internals
 
 
-isAnd : Ast -> Maybe ( Ast, Ast )
+group : Expr -> String
+group expr_ =
+    let
+        wrap string =
+            "(" ++ string ++ ")"
+    in
+    case expr_ of
+        And _ ->
+            wrap (serialize expr_)
+
+        Or _ ->
+            wrap (serialize expr_)
+
+        _ ->
+            serialize expr_
+
+
+isAnd : Ast -> Maybe (List Ast)
 isAnd ast =
     case ast of
         Parser.And a b ->
-            Just ( a, b )
+            Just [ a, b ]
 
         _ ->
             Nothing
 
 
-isOr : Ast -> Maybe ( Ast, Ast )
+isOr : Ast -> Maybe (List Ast)
 isOr ast =
     case ast of
         Parser.Or a b ->
-            Just ( a, b )
+            Just [ a, b ]
 
         _ ->
             Nothing
 
 
-join : (Ast -> Maybe ( Ast, Ast )) -> Ast -> Ast -> List Expr -> List Expr
-join isOperator first second acc =
-    case ( isOperator first, isOperator second ) of
-        ( Just ( a, b ), Just ( c, d ) ) ->
-            List.concat [ acc, join isOperator a b acc, join isOperator c d acc ]
-
-        ( Just ( a, b ), Nothing ) ->
-            List.concat [ acc, join isOperator a b acc, [ toExpr second ] ]
-
-        ( Nothing, Just ( c, d ) ) ->
-            List.concat [ acc, [ toExpr first ], join isOperator c d acc ]
-
-        ( Nothing, Nothing ) ->
-            [ toExpr first, toExpr second ]
+join : (Ast -> Maybe (List Ast)) -> List Expr -> List Ast -> List Expr
+join isOperator acc =
+    List.map
+        (\ast ->
+            isOperator ast
+                |> Maybe.map (join isOperator acc)
+                |> Maybe.withDefault [ toExpr ast ]
+        )
+        >> List.concat
+        >> (++) acc
 
 
 toExpr : Ast -> Expr
 toExpr expr =
     case expr of
         Parser.And first second ->
-            And (join isAnd first second [])
+            And (join isAnd [] [ first, second ])
 
         Parser.Exact string ->
             Exact string
@@ -163,7 +156,7 @@ toExpr expr =
             Exclude (toExpr first)
 
         Parser.Or first second ->
-            Or (join isOr first second [])
+            Or (join isOr [] [ first, second ])
 
         Parser.Prefix string ->
             Prefix string
