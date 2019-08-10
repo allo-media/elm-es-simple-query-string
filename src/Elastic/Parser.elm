@@ -88,10 +88,7 @@ orAst =
 orAstHelp : Ast -> Parser (Step Ast Ast)
 orAstHelp state =
     oneOf
-        [ succeed ()
-            |. end
-            |> map (\_ -> Done state)
-        , succeed (Loop << Or state)
+        [ succeed (Loop << Or state)
             |. backtrackable spaces
             |. symbol "|"
             |. spaces
