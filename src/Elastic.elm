@@ -14,6 +14,7 @@ string search queries out of it.
 **Notes:**
 
   - `~N` operator is not supported.
+  - `\r`, `\n` and `\t` characters will be considered as blank spaces.
   - Serialization will enforce classic boolean operator precedence by using
     parenthesis groups everywhere applicable.
 
@@ -33,7 +34,7 @@ string search queries out of it.
 
 -}
 
-import Parser exposing (..)
+import Parser exposing ((|.), (|=), DeadEnd, Parser, Step(..))
 import Set exposing (Set)
 
 
@@ -58,7 +59,10 @@ parse string =
     else
         string
             |> String.trim
-            |> Parser.run queryExpr
+            |> String.replace "\n" " "
+            |> String.replace "\u{000D}" " "
+            |> String.replace "\t" " "
+            |> Parser.run parseExpr
 
 
 {-| Serialize an [`Expr`](#Expr) to an ElasticSearch query string.
@@ -96,101 +100,96 @@ serialize expr =
 andExpr : Parser Expr
 andExpr =
     excludeExpr
-        |> andThen
-            (\ast -> loop [ ast ] andExprHelp)
+        |> Parser.andThen
+            (\ast -> Parser.loop [ ast ] andExprHelp)
 
 
 andExprHelp : List Expr -> Parser (Step (List Expr) Expr)
 andExprHelp state =
-    oneOf
-        [ succeed (\ast -> Loop (ast :: state))
-            |. backtrackable
-                (variable
+    Parser.oneOf
+        [ Parser.succeed (\ast -> Loop (ast :: state))
+            |. Parser.backtrackable
+                (Parser.variable
                     { start = \c -> c == '+' || c == ' '
                     , inner = \c -> c == '+' || c == ' '
                     , reserved = Set.fromList []
                     }
                 )
             |= excludeExpr
-        , succeed ()
-            |> map (state |> toAstList And |> Done |> always)
+        , Parser.succeed ()
+            |> Parser.map (\_ -> state |> toExprList And |> Done)
         ]
 
 
 exactExpr : Parser Expr
 exactExpr =
-    succeed Exact
-        |. symbol "\""
-        |= variable
+    Parser.succeed Exact
+        |. Parser.symbol "\""
+        |= Parser.variable
             { start = \c -> c /= '"'
             , inner = \c -> c /= '"'
             , reserved = Set.fromList []
             }
-        |. symbol "\""
+        |. Parser.symbol "\""
 
 
 excludeExpr : Parser Expr
 excludeExpr =
-    oneOf
+    Parser.oneOf
         [ pureExclude
-        , groupExp
+        , groupExpr
         ]
 
 
-groupExp : Parser Expr
-groupExp =
-    oneOf
+groupExpr : Parser Expr
+groupExpr =
+    Parser.oneOf
         [ exactExpr
         , prefixOrWord
-        , succeed identity
-            |. symbol "("
-            |. spaces
-            |= lazy (\_ -> orExpr)
-            |. spaces
-            |. symbol ")"
+        , Parser.succeed identity
+            |. Parser.symbol "("
+            |. Parser.spaces
+            |= Parser.lazy (\_ -> orExpr)
+            |. Parser.spaces
+            |. Parser.symbol ")"
         ]
 
 
 isWordChar : Char -> Bool
 isWordChar char =
-    reservedChar
-        |> Set.member char
-        |> not
+    not (Set.member char reservedChar)
 
 
 orExpr : Parser Expr
 orExpr =
     andExpr
-        |> andThen
-            (\ast -> loop [ ast ] orExprHelp)
-
-
-toAstList : (List Expr -> Expr) -> List Expr -> Expr
-toAstList toList exprs =
-    case exprs of
-        [ singleExpr ] ->
-            singleExpr
-
-        _ ->
-            exprs |> List.reverse |> toList
+        |> Parser.andThen
+            (\ast -> Parser.loop [ ast ] orExprHelp)
 
 
 orExprHelp : List Expr -> Parser (Step (List Expr) Expr)
 orExprHelp state =
-    oneOf
-        [ succeed (\ast -> Loop (ast :: state))
-            |. backtrackable spaces
-            |. symbol "|"
-            |. spaces
+    Parser.oneOf
+        [ Parser.succeed (\ast -> Loop (ast :: state))
+            |. Parser.backtrackable Parser.spaces
+            |. Parser.symbol "|"
+            |. Parser.spaces
             |= andExpr
-        , succeed ()
-            |> map (state |> toAstList Or |> Done |> always)
+        , Parser.succeed ()
+            |> Parser.map (\_ -> state |> toExprList Or |> Done)
         ]
+
+
+parseExpr : Parser Expr
+parseExpr =
+    Parser.succeed identity
+        |= orExpr
+        |. Parser.end
 
 
 prefixOrWord : Parser Expr
 prefixOrWord =
-    succeed
+    Parser.succeed
         (\word hasSymbol ->
             if hasSymbol then
                 Prefix word
@@ -198,30 +197,23 @@ prefixOrWord =
             else
                 Word word
         )
-        |= variable
+        |= Parser.variable
             { start = isWordChar
             , inner = isWordChar
             , reserved = Set.fromList []
             }
-        |= oneOf
-            [ map (\_ -> True) (symbol "*")
-            , succeed False
+        |= Parser.oneOf
+            [ Parser.map (\_ -> True) (Parser.symbol "*")
+            , Parser.succeed False
             ]
 
 
 pureExclude : Parser Expr
 pureExclude =
     Parser.succeed Exclude
-        |. symbol "-"
-        |. spaces
-        |= groupExp
-
-
-queryExpr : Parser Expr
-queryExpr =
-    succeed identity
-        |= orExpr
-        |. end
+        |. Parser.symbol "-"
+        |. Parser.spaces
+        |= groupExpr
 
 
 reservedChar : Set Char
@@ -229,22 +221,32 @@ reservedChar =
     Set.fromList [ '"', '|', '+', '*', '(', ')', ' ' ]
 
 
+toExprList : (List Expr -> Expr) -> List Expr -> Expr
+toExprList operator exprs =
+    case exprs of
+        [ singleExpr ] ->
+            singleExpr
+
+        _ ->
+            exprs |> List.reverse |> operator
+
+
 
 -- Serializer internals
 
 
 serializeGroup : Expr -> String
-serializeGroup expr_ =
+serializeGroup expr =
     let
         wrap string =
             "(" ++ string ++ ")"
     in
-    case expr_ of
+    case expr of
         And _ ->
-            wrap (serialize expr_)
+            wrap (serialize expr)
 
         Or _ ->
-            wrap (serialize expr_)
+            wrap (serialize expr)
 
         _ ->
-            serialize expr_
+            serialize expr

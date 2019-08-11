@@ -47,16 +47,22 @@ suite =
                 |> asTest "should parse grouped expressions"
             , Elastic.parse "a + b | c + d"
                 |> Expect.equal (Ok (Or [ And [ Word "a", Word "b" ], And [ Word "c", Word "d" ] ]))
-                |> asTest "should skip the + character in expressions"
+                |> asTest "should treat the + character as an AND operator"
             , Elastic.parse "a (b | c)"
                 |> Expect.equal (Ok (And [ Word "a", Or [ Word "b", Word "c" ] ]))
                 |> asTest "should parse composite AND-OR expressions"
             , Elastic.parse "(a | b c)"
                 |> Expect.equal (Ok (Or [ Word "a", And [ Word "b", Word "c" ] ]))
                 |> asTest "should parse composite OR-AND expressions"
-            , Elastic.parse "  (  a  |  b    c   ) "
+            , Elastic.parse "  (   a   |    b    c   )  "
                 |> Expect.equal (Ok (Or [ Word "a", And [ Word "b", Word "c" ] ]))
-                |> asTest "should parse spaces appropriately"
+                |> asTest "should parse and trim spaces appropriately"
+            , Elastic.parse "\n(\na\n|\nb\nc\n)\n"
+                |> Expect.equal (Ok (Or [ Word "a", And [ Word "b", Word "c" ] ]))
+                |> asTest "should parse and trim newlines appropriately"
+            , Elastic.parse "\t(\ta\t|\tb\tc\t)\t"
+                |> Expect.equal (Ok (Or [ Word "a", And [ Word "b", Word "c" ] ]))
+                |> asTest "should parse and trim tab chars appropriately"
             , Elastic.parse "(a)b"
                 |> Expect.err
                 |> asTest "should fail when missing spaces around expressions"
