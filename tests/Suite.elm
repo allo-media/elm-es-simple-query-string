@@ -39,15 +39,24 @@ suite =
             , Elastic.parse "a | b"
                 |> Expect.equal (Ok (Or [ Word "a", Word "b" ]))
                 |> asTest "should parse an OR expression"
+            , Elastic.parse "a|b"
+                |> Expect.equal (Ok (Or [ Word "a", Word "b" ]))
+                |> asTest "should parse an OR expression in a compact fashion"
             , Elastic.parse "a b"
                 |> Expect.equal (Ok (And [ Word "a", Word "b" ]))
                 |> asTest "should parse an AND expression"
+            , Elastic.parse "a + b"
+                |> Expect.equal (Ok (And [ Word "a", Word "b" ]))
+                |> asTest "should treat the + character as an AND operator"
+            , Elastic.parse "a+b"
+                |> Expect.equal (Ok (And [ Word "a", Word "b" ]))
+                |> asTest "should treat the + character as an AND operator in a compact fashion"
             , Elastic.parse "a b | c d"
                 |> Expect.equal (Ok (Or [ And [ Word "a", Word "b" ], And [ Word "c", Word "d" ] ]))
                 |> asTest "should parse grouped expressions"
             , Elastic.parse "a + b | c + d"
                 |> Expect.equal (Ok (Or [ And [ Word "a", Word "b" ], And [ Word "c", Word "d" ] ]))
-                |> asTest "should treat the + character as an AND operator"
+                |> asTest "should parse grouped expressions using + for AND expressions"
             , Elastic.parse "a (b | c)"
                 |> Expect.equal (Ok (And [ Word "a", Or [ Word "b", Word "c" ] ]))
                 |> asTest "should parse composite AND-OR expressions"
@@ -69,6 +78,18 @@ suite =
             , Elastic.parse "a b | a c"
                 |> Expect.equal (Ok (Or [ And [ Word "a", Word "b" ], And [ Word "a", Word "c" ] ]))
                 |> asTest "should handle ambiguous operator precendence"
+            , Elastic.parse "a (b | c) (d | e f | g) h"
+                |> Expect.equal
+                    (Ok
+                        (And
+                            [ Word "a"
+                            , Or [ Word "b", Word "c" ]
+                            , Or [ Word "d", And [ Word "e", Word "f" ], Word "g" ]
+                            , Word "h"
+                            ]
+                        )
+                    )
+                |> asTest "should handle deeply nested ambiguous operator precedence"
             ]
         , describe "serialize"
             [ Elastic.serialize (Word "a")
@@ -108,10 +129,20 @@ suite =
                     ]
                 )
                 |> Expect.equal "(a | b) (c (d | e))"
-                |> asTest "should serialize a nested OR group expression into a string"
+                |> asTest "should serialize a nested OR group expression"
             , Elastic.serialize (Or [ And [ Word "a", Word "b" ], And [ Word "a", Word "c" ] ])
                 |> Expect.equal "(a b) | (a c)"
                 |> asTest "should handle anbiguous operator precedence"
+            , Elastic.serialize
+                (And
+                    [ Word "a"
+                    , Or [ Word "b", Word "c" ]
+                    , Or [ Word "d", And [ Word "e", Word "f" ], Word "g" ]
+                    , Word "h"
+                    ]
+                )
+                |> Expect.equal "a (b | c) (d | (e f) | g) h"
+                |> asTest "should handle deeply nested ambiguous operator precedence"
             ]
         ]
 
