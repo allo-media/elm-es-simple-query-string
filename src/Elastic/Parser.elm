@@ -5,36 +5,12 @@ import Set exposing (Set)
 
 
 type Ast
-    = And Ast Ast
+    = And (List Ast)
     | Exact String
     | Exclude Ast
-    | Or Ast Ast
+    | Or (List Ast)
     | Prefix String
     | Word String
-
-
-andAst : Parser Ast
-andAst =
-    excludeAst
-        |> andThen
-            (\expr -> loop expr andAstHelp)
-
-
-andAstHelp : Ast -> Parser (Step Ast Ast)
-andAstHelp state =
-    oneOf
-        [ succeed (Loop << And state)
-            |. backtrackable
-                (variable
-                    { start = \c -> c == '+' || c == ' '
-                    , inner = \c -> c == '+' || c == ' '
-                    , reserved = Set.fromList []
-                    }
-                )
-            |= excludeAst
-        , succeed ()
-            |> map (\_ -> Done state)
-        ]
 
 
 exactAst : Parser Ast
@@ -78,23 +54,65 @@ isWordChar char =
         |> not
 
 
+andAst : Parser Ast
+andAst =
+    excludeAst
+        |> andThen
+            (\ast -> loop [ ast ] andAstHelp)
+
+
+andAstHelp : List Ast -> Parser (Step (List Ast) Ast)
+andAstHelp state =
+    oneOf
+        [ succeed (\ast -> Loop (ast :: state))
+            |. backtrackable
+                (variable
+                    { start = \c -> c == '+' || c == ' '
+                    , inner = \c -> c == '+' || c == ' '
+                    , reserved = Set.fromList []
+                    }
+                )
+            |= excludeAst
+        , succeed ()
+            |> map
+                (\_ ->
+                    Done
+                        (case state of
+                            [ x ] ->
+                                x
+
+                            _ ->
+                                And (List.reverse state)
+                        )
+                )
+        ]
+
+
 orAst : Parser Ast
 orAst =
-    andAst
-        |> andThen
-            (\expr -> loop expr orAstHelp)
+    andAst |> andThen (\ast -> loop [ ast ] orAstHelp)
 
 
-orAstHelp : Ast -> Parser (Step Ast Ast)
+orAstHelp : List Ast -> Parser (Step (List Ast) Ast)
 orAstHelp state =
     oneOf
-        [ succeed (Loop << Or state)
+        [ succeed (\ast -> Loop (ast :: state))
             |. backtrackable spaces
             |. symbol "|"
             |. spaces
             |= andAst
         , succeed ()
-            |> map (\_ -> Done state)
+            |> map
+                (\_ ->
+                    Done
+                        (case state of
+                            [ x ] ->
+                                x
+
+                            _ ->
+                                Or (List.reverse state)
+                        )
+                )
         ]
 
 

@@ -111,26 +111,6 @@ group expr_ =
             serialize expr_
 
 
-andNodes : Ast -> Maybe (List Ast)
-andNodes ast =
-    case ast of
-        Parser.And a b ->
-            Just [ a, b ]
-
-        _ ->
-            Nothing
-
-
-orNodes : Ast -> Maybe (List Ast)
-orNodes ast =
-    case ast of
-        Parser.Or a b ->
-            Just [ a, b ]
-
-        _ ->
-            Nothing
-
-
 join : (Ast -> Maybe (List Ast)) -> List Expr -> List Ast -> List Expr
 join getNodes acc =
     List.map
@@ -146,8 +126,8 @@ join getNodes acc =
 toExpr : Ast -> Expr
 toExpr expr =
     case expr of
-        Parser.And first second ->
-            And (join andNodes [] [ first, second ])
+        Parser.And exprs ->
+            exprs |> List.map toExpr |> And
 
         Parser.Exact string ->
             Exact string
@@ -155,8 +135,8 @@ toExpr expr =
         Parser.Exclude first ->
             Exclude (toExpr first)
 
-        Parser.Or first second ->
-            Or (join orNodes [] [ first, second ])
+        Parser.Or exprs ->
+            exprs |> List.map toExpr |> Or
 
         Parser.Prefix string ->
             Prefix string
