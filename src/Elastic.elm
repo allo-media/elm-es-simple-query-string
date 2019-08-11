@@ -49,7 +49,8 @@ type Expr
     | Word String
 
 
-{-| Parse an ElasticSearch search query string and convert it into an [`Expr`](#Expr).
+{-| Parse an ElasticSearch search query string and convert it into an
+[`Expr`](#Expr).
 -}
 parse : String -> Result (List DeadEnd) Expr
 parse string =
@@ -67,8 +68,12 @@ parse string =
 
 {-| Serialize an [`Expr`](#Expr) to an ElasticSearch query string.
 
-Note: Operator precedence will be enforced by the use of parenthesis groups
-everywhere applicable.
+**Note:** Operator precedence will be enforced by the use of parenthesis groups
+everywhere applicable. That also means this function might act as a formatter as
+well as a sanitizer:
+
+    > " a  b  |c  d  " |> parse |> Result.map serialize
+    Ok ("(a b) | (c d)") : Result (List Parser.DeadEnd) String
 
 -}
 serialize : Expr -> String
@@ -117,7 +122,7 @@ andExprHelp state =
                 )
             |= excludeExpr
         , Parser.succeed ()
-            |> Parser.map (\_ -> state |> toExprList And |> Done)
+            |> Parser.map (\_ -> state |> toListExpr And |> Done)
         ]
 
 
@@ -176,7 +181,7 @@ orExprHelp state =
             |. Parser.spaces
             |= andExpr
         , Parser.succeed ()
-            |> Parser.map (\_ -> state |> toExprList Or |> Done)
+            |> Parser.map (\_ -> state |> toListExpr Or |> Done)
         ]
 
 
@@ -221,8 +226,8 @@ reservedChar =
     Set.fromList [ '"', '|', '+', '*', '(', ')', ' ' ]
 
 
-toExprList : (List Expr -> Expr) -> List Expr -> Expr
-toExprList operator exprs =
+toListExpr : (List Expr -> Expr) -> List Expr -> Expr
+toListExpr operator exprs =
     case exprs of
         [ singleExpr ] ->
             singleExpr

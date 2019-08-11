@@ -39,12 +39,18 @@ suite =
             , Elastic.parse "a | b"
                 |> Expect.equal (Ok (Or [ Word "a", Word "b" ]))
                 |> asTest "should parse an OR expression"
+            , Elastic.parse "a | b | c"
+                |> Expect.equal (Ok (Or [ Word "a", Word "b", Word "c" ]))
+                |> asTest "should parse sequential OR expressions"
             , Elastic.parse "a|b"
                 |> Expect.equal (Ok (Or [ Word "a", Word "b" ]))
                 |> asTest "should parse an OR expression in a compact fashion"
             , Elastic.parse "a b"
                 |> Expect.equal (Ok (And [ Word "a", Word "b" ]))
                 |> asTest "should parse an AND expression"
+            , Elastic.parse "a b c"
+                |> Expect.equal (Ok (And [ Word "a", Word "b", Word "c" ]))
+                |> asTest "should parse sequential AND expressions"
             , Elastic.parse "a + b"
                 |> Expect.equal (Ok (And [ Word "a", Word "b" ]))
                 |> asTest "should treat the + character as an AND operator"
@@ -54,6 +60,9 @@ suite =
             , Elastic.parse "a b | c d"
                 |> Expect.equal (Ok (Or [ And [ Word "a", Word "b" ], And [ Word "c", Word "d" ] ]))
                 |> asTest "should parse grouped expressions"
+            , Elastic.parse "a b | c d | e f"
+                |> Expect.equal (Ok (Or [ And [ Word "a", Word "b" ], And [ Word "c", Word "d" ], And [ Word "e", Word "f" ] ]))
+                |> asTest "should parse sequential grouped expressions"
             , Elastic.parse "a + b | c + d"
                 |> Expect.equal (Ok (Or [ And [ Word "a", Word "b" ], And [ Word "c", Word "d" ] ]))
                 |> asTest "should parse grouped expressions using + for AND expressions"
