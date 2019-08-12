@@ -1,8 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Elastic as Elastic
-import Elastic.Expression exposing (Expr(..))
+import Elastic exposing (Expr(..))
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -10,48 +9,51 @@ import Parser exposing (DeadEnd)
 
 
 type alias Model =
-    { query : Result (List DeadEnd) Expr }
+    { input : String
+    , query : Result (List DeadEnd) Expr
+    }
 
 
 init : Model
 init =
-    { query = Ok (Word "") }
+    { input = "", query = Elastic.parse "" }
 
 
 type Msg
-    = Parse (Result (List DeadEnd) Expr)
+    = UpdateInput String
 
 
 view : Model -> Html Msg
 view model =
     div []
-        [ input [ onInput (Parse << Elastic.parseQuery) ] []
-        , div []
-            [ case model.query of
-                Ok value ->
-                    div []
-                        [ text "ExplicitOr: True"
-                        , br [] []
-                        , Elastic.serializeExpr { explicitOr = True } value |> text
-                        , hr [] []
-                        , text "ExplicitOr: False"
-                        , br [] []
-                        , Elastic.serializeExpr { explicitOr = False } value |> text
-                        , hr [] []
-                        , Debug.toString value |> text
-                        ]
-
-                Err err ->
-                    Debug.toString err |> text
+        [ h1 [] [ text "elm-es-simple-query" ]
+        , input
+            [ onInput UpdateInput
+            , placeholder "Enter a search query"
+            , size 100
+            , value model.input
             ]
+            []
+        , case model.query of
+            Ok value ->
+                div []
+                    [ h2 [] [ text "Elm data structure" ]
+                    , pre [] [ Debug.toString value |> text ]
+                    , hr [] []
+                    , h2 [] [ text "Serialized" ]
+                    , pre [] [ Elastic.serialize value |> text ]
+                    ]
+
+            Err err ->
+                pre [] [ Debug.toString err |> text ]
         ]
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Parse result ->
-            { model | query = result }
+        UpdateInput input ->
+            { model | input = input, query = Elastic.parse input }
 
 
 main : Program () Model Msg
