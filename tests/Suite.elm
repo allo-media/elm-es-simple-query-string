@@ -86,7 +86,7 @@ suite =
                 |> asTest "should fail when missing spaces around expressions"
             , Elastic.parse "a b | a c"
                 |> Expect.equal (Ok (Or [ And [ Word "a", Word "b" ], And [ Word "a", Word "c" ] ]))
-                |> asTest "should handle ambiguous operator precendence"
+                |> asTest "should handle ambiguous operator precedence"
             , Elastic.parse "a (b | c) (d | e f | g) h"
                 |> Expect.equal
                     (Ok
