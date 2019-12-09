@@ -6,7 +6,7 @@ jobs:
         - gh-pages
 
     docker:
-      - image: circleci/node:lts-stretch
+      - image: circleci/node:13.3-stretch
 
     steps:
       - checkout
