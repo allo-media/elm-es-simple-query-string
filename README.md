@@ -9,7 +9,6 @@ string search queries out of it.
 
 **Notes:**
 
-  - `~N` operator is not supported.
   - Serialization will enforce classic boolean operator precedence by using
     parenthesis groups everywhere applicable.
 
@@ -23,6 +22,7 @@ string search queries out of it.
     \+ AND
     -- Exclude
     "" Exact
+    ~n Fuzzy
     \* Prefix
 
 Specific case : Spaces (signifying in some contexts and not in others)
@@ -34,6 +34,7 @@ type Expr
     = And (List Expr)
     | Exact String
     | Exclude Expr
+    | Fuzzy Int String
     | Or (List Expr)
     | Prefix String
     | Word String
@@ -47,7 +48,7 @@ Unless explicitly indicated, spaces are ignored.
     ORExpr => ANDExpr | ANDExpr "|" ORExpr
     ANDExpr => EXCExpr | EXCExpr ("+"|\s+) ANDExpr
     EXCExpr => "-" GRPExpr | GRPExpr
-    GRPExpr => WORD~"\*" | WORD | \" EXACTExpr \" | "(" ORExpr ")"
+    GRPExpr => WORD~"\*" | WORD~"\~2" | WORD | \" EXACTExpr \" | "(" ORExpr ")"
     EXACTExpr => [^"]+
 
 ## Example

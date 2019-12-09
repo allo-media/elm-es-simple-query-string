@@ -153,11 +153,7 @@ groupExpr : Parser Expr
 groupExpr =
     Parser.oneOf
         [ exactExpr
-
-        -- , fuzzyExpr
-        -- , prefixExpr
-        , prefixOrWord
-        , wordExpr
+        , singleWordExpr
         , Parser.succeed identity
             |. Parser.symbol "("
             |. Parser.spaces
@@ -205,8 +201,8 @@ type ParsedWord
     | Fuzzied Int
 
 
-prefixOrWord : Parser Expr
-prefixOrWord =
+singleWordExpr : Parser Expr
+singleWordExpr =
     Parser.succeed
         (\word kind ->
             case kind of
@@ -231,16 +227,6 @@ prefixOrWord =
                 |= Parser.int
             , Parser.succeed Simple
             ]
-
-
-wordExpr : Parser Expr
-wordExpr =
-    Parser.succeed Word
-        |= Parser.variable
-            { start = isWordChar
-            , inner = isWordChar
-            , reserved = Set.fromList []
-            }
 
 
 pureExclude : Parser Expr
