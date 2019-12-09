@@ -195,37 +195,20 @@ parseExpr =
         |. Parser.end
 
 
-type ParsedWord
-    = Simple
-    | Prefixed
-    | Fuzzied Int
-
-
 singleWordExpr : Parser Expr
 singleWordExpr =
-    Parser.succeed
-        (\word kind ->
-            case kind of
-                Simple ->
-                    Word word
-
-                Prefixed ->
-                    Prefix word
-
-                Fuzzied level ->
-                    Fuzzy level word
-        )
+    Parser.succeed (\word toExpr -> toExpr word)
         |= Parser.variable
             { start = isWordChar
             , inner = isWordChar
             , reserved = Set.fromList []
             }
         |= Parser.oneOf
-            [ Parser.map (\_ -> Prefixed) (Parser.symbol "*")
-            , Parser.succeed Fuzzied
+            [ Parser.map (\_ -> Prefix) (Parser.symbol "*")
+            , Parser.succeed Fuzzy
                 |. Parser.symbol "~"
                 |= Parser.int
-            , Parser.succeed Simple
+            , Parser.succeed Word
             ]
 
 
