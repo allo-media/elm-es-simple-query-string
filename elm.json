@@ -3,7 +3,7 @@
     "name": "allo-media/elm-es-simple-query-string",
     "summary": "Parse and serialize ElasticSearch search strings.",
     "license": "MIT",
-    "version": "3.0.0",
+    "version": "4.0.0",
     "exposed-modules": [
         "Elastic"
     ],
