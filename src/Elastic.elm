@@ -13,7 +13,6 @@ string search queries out of it.
 
 **Notes:**
 
-  - `~N` operator is not supported.
   - `\r`, `\n` and `\t` characters will be considered as blank spaces.
   - Serialization will enforce classic boolean operator precedence by using
     parenthesis groups everywhere applicable.
@@ -44,6 +43,7 @@ type Expr
     = And (List Expr)
     | Exact String
     | Exclude Expr
+    | Fuzzy Int String
     | Or (List Expr)
     | Prefix String
     | Word String
@@ -87,6 +87,9 @@ serialize expr =
 
         Exact string ->
             "\"" ++ string ++ "\""
+
+        Fuzzy level string ->
+            string ++ "~" ++ String.fromInt level
 
         Or children ->
             children |> List.map serializeGroup |> String.join " | "
@@ -150,7 +153,7 @@ groupExpr : Parser Expr
 groupExpr =
     Parser.oneOf
         [ exactExpr
-        , prefixOrWord
+        , singleWordExpr
         , Parser.succeed identity
             |. Parser.symbol "("
             |. Parser.spaces
@@ -192,24 +195,20 @@ parseExpr =
         |. Parser.end
 
 
-prefixOrWord : Parser Expr
-prefixOrWord =
-    Parser.succeed
-        (\word hasSymbol ->
-            if hasSymbol then
-                Prefix word
-
-            else
-                Word word
-        )
+singleWordExpr : Parser Expr
+singleWordExpr =
+    Parser.succeed (\word toExpr -> toExpr word)
         |= Parser.variable
             { start = isWordChar
             , inner = isWordChar
             , reserved = Set.fromList []
             }
         |= Parser.oneOf
-            [ Parser.map (\_ -> True) (Parser.symbol "*")
-            , Parser.succeed False
+            [ Parser.map (\_ -> Prefix) (Parser.symbol "*")
+            , Parser.succeed Fuzzy
+                |. Parser.symbol "~"
+                |= Parser.int
+            , Parser.succeed Word
             ]
 
 
@@ -223,7 +222,7 @@ pureExclude =
 
 reservedChar : Set Char
 reservedChar =
-    Set.fromList [ '"', '|', '+', '*', '(', ')', ' ' ]
+    Set.fromList [ '"', '|', '+', '*', '~', '(', ')', ' ' ]
 
 
 toListExpr : (List Expr -> Expr) -> List Expr -> Expr
