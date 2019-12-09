@@ -13,7 +13,6 @@ string search queries out of it.
 
 **Notes:**
 
-  - `~N` operator is not supported.
   - `\r`, `\n` and `\t` characters will be considered as blank spaces.
   - Serialization will enforce classic boolean operator precedence by using
     parenthesis groups everywhere applicable.
@@ -44,6 +43,7 @@ type Expr
     = And (List Expr)
     | Exact String
     | Exclude Expr
+    | Fuzzy Int String
     | Or (List Expr)
     | Prefix String
     | Word String
@@ -87,6 +87,9 @@ serialize expr =
 
         Exact string ->
             "\"" ++ string ++ "\""
+
+        Fuzzy level string ->
+            string ++ "~" ++ String.fromInt level
 
         Or children ->
             children |> List.map serializeGroup |> String.join " | "
@@ -150,7 +153,11 @@ groupExpr : Parser Expr
 groupExpr =
     Parser.oneOf
         [ exactExpr
+
+        -- , fuzzyExpr
+        -- , prefixExpr
         , prefixOrWord
+        , wordExpr
         , Parser.succeed identity
             |. Parser.symbol "("
             |. Parser.spaces
@@ -192,15 +199,25 @@ parseExpr =
         |. Parser.end
 
 
+type ParsedWord
+    = Simple
+    | Prefixed
+    | Fuzzied Int
+
+
 prefixOrWord : Parser Expr
 prefixOrWord =
     Parser.succeed
-        (\word hasSymbol ->
-            if hasSymbol then
-                Prefix word
+        (\word kind ->
+            case kind of
+                Simple ->
+                    Word word
 
-            else
-                Word word
+                Prefixed ->
+                    Prefix word
+
+                Fuzzied level ->
+                    Fuzzy level word
         )
         |= Parser.variable
             { start = isWordChar
@@ -208,9 +225,22 @@ prefixOrWord =
             , reserved = Set.fromList []
             }
         |= Parser.oneOf
-            [ Parser.map (\_ -> True) (Parser.symbol "*")
-            , Parser.succeed False
+            [ Parser.map (\_ -> Prefixed) (Parser.symbol "*")
+            , Parser.succeed Fuzzied
+                |. Parser.symbol "~"
+                |= Parser.int
+            , Parser.succeed Simple
             ]
+
+
+wordExpr : Parser Expr
+wordExpr =
+    Parser.succeed Word
+        |= Parser.variable
+            { start = isWordChar
+            , inner = isWordChar
+            , reserved = Set.fromList []
+            }
 
 
 pureExclude : Parser Expr
@@ -223,7 +253,7 @@ pureExclude =
 
 reservedChar : Set Char
 reservedChar =
-    Set.fromList [ '"', '|', '+', '*', '(', ')', ' ' ]
+    Set.fromList [ '"', '|', '+', '*', '~', '(', ')', ' ' ]
 
 
 toListExpr : (List Expr -> Expr) -> List Expr -> Expr

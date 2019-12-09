@@ -30,6 +30,12 @@ suite =
             , Elastic.parse "a*"
                 |> Expect.equal (Ok (Prefix "a"))
                 |> asTest "should parse a Prefix expression"
+            , Elastic.parse "a~2"
+                |> Expect.equal (Ok (Fuzzy 2 "a"))
+                |> asTest "should parse a fuzzy match expression"
+            , Elastic.parse "-a~2"
+                |> Expect.equal (Ok (Exclude (Fuzzy 2 "a")))
+                |> asTest "should parse an excluded fuzzy match expression"
             , Elastic.parse "-a"
                 |> Expect.equal (Ok (Exclude (Word "a")))
                 |> asTest "should parse an Exclude expression"
@@ -107,12 +113,18 @@ suite =
             , Elastic.serialize (Prefix "a")
                 |> Expect.equal "a*"
                 |> asTest "should serialize an Prefix expression into string"
+            , Elastic.serialize (Fuzzy 2 "a")
+                |> Expect.equal "a~2"
+                |> asTest "should serialize a Fuzzy expression into string"
             , Elastic.serialize (Exclude (Word "a"))
                 |> Expect.equal "-a"
                 |> asTest "should serialize an Exclude expression with a Word expression into string"
             , Elastic.serialize (Exclude (Prefix "a"))
                 |> Expect.equal "-a*"
                 |> asTest "should serialize an Exclude expression with a Prefix expression into string"
+            , Elastic.serialize (Exclude (Fuzzy 2 "a"))
+                |> Expect.equal "-a~2"
+                |> asTest "should serialize an Exclude expression with a Fuzzy expression into string"
             , Elastic.serialize (Exclude (Or [ Prefix "a", Exact "b c" ]))
                 |> Expect.equal "-(a* | \"b c\")"
                 |> asTest "should serialize an Exclude expression with a group expression into string"
